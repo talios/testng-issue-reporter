@@ -77,7 +77,7 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
             params.add(key);
             params.add(sb.toString());
 
-//            client.execute("jira1.addComment", params);
+            client.execute("jira1.addComment", params);
 
 
         } catch (MalformedURLException e) {
