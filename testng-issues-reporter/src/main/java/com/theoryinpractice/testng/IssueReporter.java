@@ -59,6 +59,9 @@ public class IssueReporter implements ITestListener {
     private void processRelatedIssueFailure(RelatedIssue relatedIssue, ITestResult iTestResult) {
         System.out.println("Looking for match in: '" + relatedIssue.value() + "'");
 
+
+        RelatedIssueSource relatedIssueSource = findRelatedIssueSource(iTestResult.getTestClass().getRealClass());
+
         Matcher issueMatcher = Pattern.compile("(jira)://(.*)/(.*)").matcher(relatedIssue.value());
         if (issueMatcher.matches()) {
             String protocol = issueMatcher.group(1);
@@ -70,6 +73,45 @@ public class IssueReporter implements ITestListener {
 
             handler.handleFailedTest(host, key, iTestResult);
         }
+    }
+
+    public RelatedIssueSource findRelatedIssueSource(Class clazz) {
+
+        RelatedIssueSource relatedIssueSource = null;
+
+        String packageName = clazz.getPackage().getName();
+
+        if (clazz.isAnnotationPresent(RelatedIssueSource.class)) {
+            relatedIssueSource = (RelatedIssueSource) clazz.getAnnotation(RelatedIssueSource.class);
+        }
+
+        if (relatedIssueSource == null) {
+            Class[] classes = clazz.getClasses();
+
+            for (Class aClass : classes) {
+                if (aClass.isAnnotationPresent(RelatedIssueSource.class)) {
+                    relatedIssueSource = (RelatedIssueSource) aClass.getAnnotation(RelatedIssueSource.class);
+                    break;
+                }
+            }
+        }
+
+        while (!"".equals(packageName) && relatedIssueSource == null) {
+
+            Package aPackage = Package.getPackage(packageName);
+            System.out.println("Looking up package " + packageName + ": " + aPackage);
+            if (aPackage != null && aPackage.isAnnotationPresent(RelatedIssueSource.class)) {
+                relatedIssueSource = (RelatedIssueSource) aPackage.getAnnotation(RelatedIssueSource.class);
+                break;
+            }
+
+            Matcher matcher = Pattern.compile("(.*)(\\..*)$").matcher(packageName);
+
+            packageName = matcher.find() ? matcher.group(1) : "";
+
+        }
+
+        return relatedIssueSource;
     }
 
     private IssueReporterHandler issueReporterHandlerFor(String protocol) {

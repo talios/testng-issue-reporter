@@ -8,6 +8,13 @@
     <name>TestNG Issues Reporter</name>
     <url>http://maven.apache.org</url>
 
+    <repositories>
+        <repository>
+            <id>maven-snapshot-repository</id>
+            <url>http://people.apache.org/maven-snapshot-repository</url>
+        </repository>
+    </repositories>
+
     <build>
         <plugins>
             <!-- Compile for JDK 1.5 -->
@@ -30,15 +37,7 @@
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <type>jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
+         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>5.1</version>
@@ -47,9 +46,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ws.xmlrpc</groupId>
-            <artifactId>xmlrpc</artifactId>
-            <version>3.0a1</version>
+            <groupId>org.apache.xmlrpc</groupId>
+            <artifactId>xmlrpc-client</artifactId>
+            <version>3.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
