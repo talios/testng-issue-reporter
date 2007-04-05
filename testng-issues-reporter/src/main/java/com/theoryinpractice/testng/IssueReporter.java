@@ -98,6 +98,11 @@ public class IssueReporter implements ITestListener {
 
         while (!"".equals(packageName) && relatedIssueSource == null) {
 
+            try {
+                Class.forName(packageName + ".package-info");
+            } catch (ClassNotFoundException e) {
+                // We expect ClassNotFound as package-info is an invalid class name, but it loads the package information.
+            }
             Package aPackage = Package.getPackage(packageName);
             System.out.println("Looking up package " + packageName + ": " + aPackage);
             if (aPackage != null && aPackage.isAnnotationPresent(RelatedIssueSource.class)) {
