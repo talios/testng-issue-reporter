@@ -13,7 +13,7 @@ import org.testng.annotations.Test;
 public class TestIssue {
 
     @Test(enabled = false)
-    @RelatedIssue("TST-1")
+    @RelatedIssues("TST-1")
     public void testSomething() {
         assert false : "Test failed - boo hoo go cry to mother...";
     }

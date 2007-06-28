@@ -11,10 +11,15 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import java.lang.annotation.Annotation;
-import java.util.regex.Pattern;
+import java.util.Arrays;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class IssueReporter implements ITestListener {
+
+    public IssueReporter() {
+        System.out.println("Created RelatedIssue Failure Monitoring");
+    }
 
     public void onTestStart(ITestResult iTestResult) {
         // Ignore it
@@ -41,38 +46,34 @@ public class IssueReporter implements ITestListener {
     }
 
     public void onTestFailure(ITestResult iTestResult) {
-
-        boolean hasRelatedIssues = iTestResult.getMethod().getMethod().isAnnotationPresent(RelatedIssue.class);
+        System.out.println("Processing test failure");
+        boolean hasRelatedIssues = iTestResult.getMethod().getMethod().isAnnotationPresent(RelatedIssues.class);
 
         if (hasRelatedIssues) {
+            System.out.println("Found an associated issue");
             Annotation[] annotations = iTestResult.getMethod().getMethod().getDeclaredAnnotations();
             for (Annotation annotation : annotations) {
-                if (annotation.annotationType() == RelatedIssue.class) {
-                    RelatedIssue relatedIssue = (RelatedIssue) annotation;
-                    processRelatedIssueFailure(relatedIssue, iTestResult);
+                if (annotation.annotationType() == RelatedIssues.class) {
+                    RelatedIssues relatedIssues = (RelatedIssues) annotation;
+                    processRelatedIssueFailure(relatedIssues, iTestResult);
                 }
             }
         }
 
     }
 
-    private void processRelatedIssueFailure(RelatedIssue relatedIssue, ITestResult iTestResult) {
-        System.out.println("Looking for match in: '" + relatedIssue.value() + "'");
-
+    private void processRelatedIssueFailure(RelatedIssues relatedIssues, ITestResult iTestResult) {
 
         RelatedIssueSource relatedIssueSource = findRelatedIssueSource(iTestResult.getTestClass().getRealClass());
 
-        Matcher issueMatcher = Pattern.compile("(jira)://(.*)/(.*)").matcher(relatedIssue.value());
-        if (issueMatcher.matches()) {
-            String protocol = issueMatcher.group(1);
-            String host = issueMatcher.group(2);
-            String key = issueMatcher.group(3);
+        String[] issue = relatedIssues.value();
 
-            System.out.println("Looking up handler for '" + protocol + "'");
-            IssueReporterHandler handler = issueReporterHandlerFor(protocol);
+        for (String relatedIssue : issue) {
+            IssueReporterHandler handler = issueReporterHandlerFor("jira");
 
-            handler.handleFailedTest(host, key, iTestResult);
+            handler.handleFailedTest(relatedIssueSource.value(), relatedIssue, iTestResult);
         }
+
     }
 
     public RelatedIssueSource findRelatedIssueSource(Class clazz) {
@@ -81,6 +82,7 @@ public class IssueReporter implements ITestListener {
 
         String packageName = clazz.getPackage().getName();
 
+        System.out.println("Looking for @RelatedIssueSource on " + clazz.getName());
         if (clazz.isAnnotationPresent(RelatedIssueSource.class)) {
             relatedIssueSource = (RelatedIssueSource) clazz.getAnnotation(RelatedIssueSource.class);
         }
@@ -89,6 +91,7 @@ public class IssueReporter implements ITestListener {
             Class[] classes = clazz.getClasses();
 
             for (Class aClass : classes) {
+                System.out.println("Looking for @RelatedIssueSource on " + aClass.getName());
                 if (aClass.isAnnotationPresent(RelatedIssueSource.class)) {
                     relatedIssueSource = (RelatedIssueSource) aClass.getAnnotation(RelatedIssueSource.class);
                     break;
@@ -104,16 +107,14 @@ public class IssueReporter implements ITestListener {
                 // We expect ClassNotFound as package-info is an invalid class name, but it loads the package information.
             }
             Package aPackage = Package.getPackage(packageName);
-            System.out.println("Looking up package " + packageName + ": " + aPackage);
             if (aPackage != null && aPackage.isAnnotationPresent(RelatedIssueSource.class)) {
+                System.out.println("Looking for @RelatedIssueSource on " + aPackage.getName());            
                 relatedIssueSource = (RelatedIssueSource) aPackage.getAnnotation(RelatedIssueSource.class);
                 break;
             }
 
             Matcher matcher = Pattern.compile("(.*)(\\..*)$").matcher(packageName);
-
             packageName = matcher.find() ? matcher.group(1) : "";
-
         }
 
         return relatedIssueSource;

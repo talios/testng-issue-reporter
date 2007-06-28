@@ -15,5 +15,5 @@ import java.lang.annotation.ElementType;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface RelatedIssues {
-    RelatedIssue[] value();
+    String[] value();
 }

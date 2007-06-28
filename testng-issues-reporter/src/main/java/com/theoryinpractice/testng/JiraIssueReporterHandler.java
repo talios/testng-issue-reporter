@@ -24,10 +24,13 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
 
     public void handleFailedTest(String host, String key, ITestResult iTestResult) {
 
+        System.out.println("Commenting issue " + key + " with test failure.");
+
         String username = System.getProperty("testngIssueUsername", "");
         String password = System.getProperty("testngIssuePassword", "");
 
-        if (username.equals("") || !password.equals("")) {
+        System.out.println("username is " + username);
+        if (username.equals("") || password.equals("")) {
             System.out.println("Missing authentication details...");
             return;
         }
@@ -50,16 +53,10 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
         sb.append("\n");
         sb.append("{code}\n");
 
-
-        System.out.println(sb.toString());
-
-
-
-
         try {
             System.out.println("Connecting to xml-rpc host on " + host);
             XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL("http://" + host + "/rpc/xmlrpc"));
+            config.setServerURL(new URL(host + "/rpc/xmlrpc"));
             XmlRpcClient client = new XmlRpcClient();
             client.setConfig(config);
 
