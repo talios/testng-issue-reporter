@@ -12,8 +12,6 @@ import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import org.testng.ITestResult;
 import org.testng.Reporter;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,11 +44,15 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
         sb.append(iTestResult.getMethod().getMethodName());
         sb.append("}\n");
 
-        StringWriter sw = new StringWriter();
+        StackTraceElement[] elements = iTestResult.getThrowable().getStackTrace();
 
-        iTestResult.getThrowable().printStackTrace(new PrintWriter(sw));
-        sb.append(sw.toString());
-        sb.append("\n");
+        System.out.println(iTestResult.getThrowable().getClass().getName());
+        for (StackTraceElement element : elements) {
+            if (!element.getClassName().matches("(sun.reflect|java.lang.reflect|org.testng).*")) {
+                sb.append("    at ").append(element.toString()).append("\n");
+            }
+        }
+
         sb.append("{code}\n");
 
         try {
