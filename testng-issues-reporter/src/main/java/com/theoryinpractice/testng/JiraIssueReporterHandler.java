@@ -21,6 +21,69 @@ import java.util.Iterator;
 
 public class JiraIssueReporterHandler implements IssueReporterHandler {
 
+
+    public void handleFailedTest(TestFailureWrapper test) {
+
+        System.out.println("Commenting issue " + test.getIssue() + " with test failure.");
+
+        String username = System.getProperty("testngIssueUsername", "");
+        String password = System.getProperty("testngIssuePassword", "");
+
+        System.out.println("username is " + username);
+        if (username.equals("") || password.equals("")) {
+            System.out.println("Missing authentication details...");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("The following test(s) associated with this issue recorded a failure:\n\n");
+
+        for (String signature : test.getSignatures()) {
+            sb.append("* ").append(signature).append("\n");
+        }
+
+        sb.append("\nThe test(s) failed with the following (filtered) exception:\n\n");
+
+        sb.append("{code}\n").append(test.getStackTrace()).append("\n{code}\n");
+
+
+        try {
+            System.out.println("Connecting to xml-rpc host on " + test.getRelatedIssueSource().value());
+            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            config.setServerURL(new URL(test.getRelatedIssueSource().value() + "/rpc/xmlrpc"));
+            XmlRpcClient client = new XmlRpcClient();
+            client.setConfig(config);
+
+            List params = new ArrayList();
+            params.add(username);
+            params.add(password);
+
+            System.out.println("Attempting to login to JIRA installation at " + test.getRelatedIssueSource().value() + " as " + username);
+
+            String token = (String) client.execute("jira1.login", params);
+
+            System.out.println("Adding comment to " + test.getIssue());
+            params = new Vector();
+            params.add(token);
+            params.add(test.getIssue());
+            params.add(sb.toString());
+
+            client.execute("jira1.addComment", params);
+
+
+        } catch (MalformedURLException e) {
+            Reporter.log(e.getMessage());
+            e.printStackTrace();
+        } catch (XmlRpcException e) {
+            Reporter.log(e.getMessage());
+            e.printStackTrace();
+        }
+
+
+    }
+
+
     public void handleFailedTest(String host, String key, ITestResult iTestResult) {
 
         System.out.println("Commenting issue " + key + " with test failure.");
@@ -103,5 +166,6 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
         }
 
     }
+
 
 }

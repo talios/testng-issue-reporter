@@ -9,5 +9,7 @@ package com.theoryinpractice.testng;
 import org.testng.ITestResult;
 
 public interface IssueReporterHandler {
-    void handleFailedTest(String host, String key, ITestResult iTestResult);    
+    void handleFailedTest(String host, String key, ITestResult iTestResult);
+
+    void handleFailedTest(TestFailureWrapper value);
 }
