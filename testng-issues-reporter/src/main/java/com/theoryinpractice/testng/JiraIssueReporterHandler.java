@@ -17,6 +17,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.Iterator;
 
 public class JiraIssueReporterHandler implements IssueReporterHandler {
 
@@ -35,13 +36,27 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("A test associated with this issue has failed: \n\n");
-        sb.append("\n");
+        sb.append("A test associated with this issue has failed.\n\n");
+
         sb.append("\n");
         sb.append("{code:title=");
         sb.append(iTestResult.getTestClass().getName());
         sb.append("#");
         sb.append(iTestResult.getMethod().getMethodName());
+        sb.append("(");
+
+        Object[] parameters = iTestResult.getParameters();
+
+        for (int i = 0; i < parameters.length; i++) {
+            Object parameter = parameters[i];
+            sb.append(parameter.toString());
+            if (i < parameters.length) {
+                sb.append(", ");
+            }
+        }
+        sb.append(")");
+
+
         sb.append("}\n");
 
         StackTraceElement[] elements = iTestResult.getThrowable().getStackTrace();
