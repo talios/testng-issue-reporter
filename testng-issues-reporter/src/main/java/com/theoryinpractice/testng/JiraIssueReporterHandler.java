@@ -9,8 +9,6 @@ package com.theoryinpractice.testng;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.testng.ITestResult;
-import org.testng.Reporter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,8 +24,8 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
 
         Set<String> projectKeys = new HashSet<String>();
 
-        String username = System.getProperty(IssueReporter.TESTNG_ISSUEREPORT_USERNAME, "");
-        String password = System.getProperty(IssueReporter.TESTNG_ISSUEREPORT_PASSWORD, "");
+        String username = System.getProperty(IssueReporter.TESTNG_ISSUEREPORTER_USERNAME, "");
+        String password = System.getProperty(IssueReporter.TESTNG_ISSUEREPORTER_PASSWORD, "");
 
         System.out.println("username is " + username);
         if (username.equals("") || password.equals("")) {

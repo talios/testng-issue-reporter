@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
 
 public class IssueReporter implements ITestListener {
 
-    public static final String TESTNG_ISSUEREPORT_SKIP = "testng.issuereport.skip";
-    public static final String TESTNG_ISSUEREPORT_USERNAME = "testng.issuereport.username";
-    public static final String TESTNG_ISSUEREPORT_PASSWORD = "testng.issuereport.password";
+    public static final String TESTNG_ISSUEREPORTER_SKIP = "testng.issuereporter.skip";
+    public static final String TESTNG_ISSUEREPORTER_USERNAME = "testng.issuereporter.username";
+    public static final String TESTNG_ISSUEREPORTER_PASSWORD = "testng.issuereporter.password";
 
     private Map<String, Map<String, TestFailureWrapper>> testHistory = new HashMap<String, Map<String, TestFailureWrapper>>();
     private Map<String, TestFailureWrapper> testFailureMap = new HashMap<String, TestFailureWrapper>();
@@ -79,7 +79,7 @@ public class IssueReporter implements ITestListener {
         IssueReporterHandler handler = issueReporterHandlerFor("jira");
 
                                                       
-        if (!"true".equals(System.getProperty(TESTNG_ISSUEREPORT_SKIP))) {
+        if (!"true".equals(System.getProperty(TESTNG_ISSUEREPORTER_SKIP))) {
 
             handler.handleFailedTest(testFailureMap, relatedIssueKeys, relatedIssueSource);
         }
