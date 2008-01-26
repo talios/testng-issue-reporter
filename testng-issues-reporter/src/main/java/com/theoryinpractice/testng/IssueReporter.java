@@ -15,9 +15,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,10 +78,12 @@ public class IssueReporter implements ITestListener {
     public void onFinish(ITestContext iTestContext) {
         IssueReporterHandler handler = issueReporterHandlerFor("jira");
 
-                                                      
-        if (!"true".equals(System.getProperty(TESTNG_ISSUEREPORTER_SKIP))) {
-
-            handler.handleFailedTest(testFailureMap, relatedIssueKeys, relatedIssueSource);
+        if (!testFailureMap.isEmpty()) {
+            if (!"true".equals(System.getProperty(TESTNG_ISSUEREPORTER_SKIP))) {
+                handler.handleFailedTest(testFailureMap, relatedIssueKeys, relatedIssueSource);
+            } else {
+                System.out.println("Skipping issue reporting to jira.");
+            }
         }
     }
 
