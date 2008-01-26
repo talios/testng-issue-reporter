@@ -9,16 +9,16 @@ package com.theoryinpractice.testng;
 
 import org.testng.annotations.Test;
 
-@RelatedIssueSource("http://jira.bulletinwireless.net")
+@RelatedIssueSource("http://jira.somewhere.net")
 public class TestIssue {
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @RelatedIssues("TEST-73")
     public void testSomething() {
         assert false : "Test failed - boo hoo go cry to mother...";
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @RelatedIssues("TEST-74")
     public void testSomethingElse() {
         assert false : "Test failed - boo hoo go cry to mother...";
