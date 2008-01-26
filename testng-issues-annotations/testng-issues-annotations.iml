@@ -1,32 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module relativePaths="false" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_5" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/target/classes" />
     <exclude-output />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/resources" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/target" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/resources" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
-      <library>
+      <library name="junit:junit:3.8.1">
         <CLASSES>
           <root url="jar:///Users/amrk/.m2/repository/junit/junit/3.8.1/junit-3.8.1.jar!/" />
         </CLASSES>
-        <JAVADOC />
-        <SOURCES />
+        <JAVADOC>
+          <root url="jar:///Users/amrk/.m2/repository/junit/junit/3.8.1/junit-3.8.1-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar:///Users/amrk/.m2/repository/junit/junit/3.8.1/junit-3.8.1-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
+    <orderEntry type="module-library" exported="">
+      <library name="log4j:log4j:1.2.13">
         <CLASSES>
           <root url="jar:///Users/amrk/.m2/repository/log4j/log4j/1.2.13/log4j-1.2.13.jar!/" />
         </CLASSES>
-        <JAVADOC />
-        <SOURCES />
+        <JAVADOC>
+          <root url="jar:///Users/amrk/.m2/repository/log4j/log4j/1.2.13/log4j-1.2.13-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar:///Users/amrk/.m2/repository/log4j/log4j/1.2.13/log4j-1.2.13-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
     <orderEntryProperties />

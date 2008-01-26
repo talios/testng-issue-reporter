@@ -16,12 +16,23 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class IssueReporter implements ITestListener {
 
+    public static final String TESTNG_ISSUEREPORT_SKIP = "testng.issuereport.skip";
+    public static final String TESTNG_ISSUEREPORT_USERNAME = "testng.issuereport.username";
+    public static final String TESTNG_ISSUEREPORT_PASSWORD = "testng.issuereport.password";
+
     private Map<String, Map<String, TestFailureWrapper>> testHistory = new HashMap<String, Map<String, TestFailureWrapper>>();
+    private Map<String, TestFailureWrapper> testFailureMap = new HashMap<String, TestFailureWrapper>();
+    private Set<String> relatedIssueKeys = new HashSet<String>();
+
+    private RelatedIssueSource relatedIssueSource;
+
 
     public IssueReporter() {
         System.out.println("Created RelatedIssue Failure Monitoring");
@@ -67,52 +78,41 @@ public class IssueReporter implements ITestListener {
     public void onFinish(ITestContext iTestContext) {
         IssueReporterHandler handler = issueReporterHandlerFor("jira");
 
-        for (Map.Entry<String, Map<String, TestFailureWrapper>> issue : testHistory.entrySet()) {
-            System.out.println("Reporting Test Failures against issue " + issue.getKey());
+                                                      
+        if (!"true".equals(System.getProperty(TESTNG_ISSUEREPORT_SKIP))) {
 
-            Map<String, TestFailureWrapper> testFailures = issue.getValue();
-            for (Map.Entry<String, TestFailureWrapper> wrapperEntry : testFailures.entrySet()) {
-                System.out.println("  - Reporting for hash + " + wrapperEntry.getKey());
-
-                handler.handleFailedTest(wrapperEntry.getValue());
-            }
-
+            handler.handleFailedTest(testFailureMap, relatedIssueKeys, relatedIssueSource);
         }
-
-
-
-//            handler.handleFailedTest(relatedIssueSource.value(), relatedIssue, iTestResult);
-        // Ignore it
     }
 
 
     private void processRelatedIssueFailure(RelatedIssues relatedIssues, ITestResult iTestResult) {
 
-        RelatedIssueSource relatedIssueSource = findRelatedIssueSource(iTestResult.getTestClass().getRealClass());
+        if (relatedIssueSource == null) {
+            relatedIssueSource = findRelatedIssueSource(iTestResult.getTestClass().getRealClass());
+        }
 
         String[] issue = relatedIssues.value();
 
         String signature = buildSignatureForTestResult(iTestResult);
         String stackTrace = buildStackTraceForTestResult(iTestResult);
 
-        for (String relatedIssue : issue) {
-            TestFailureWrapper wrapper = getTestFailureWrapperFor(relatedIssueSource, relatedIssue, stackTrace);
-            wrapper.getSignatures().add(signature);
+        TestFailureWrapper wrapper = getTestFailureWrapperFor(relatedIssueSource, stackTrace);
+        wrapper.getSignatures().add(signature);
 
-//            IssueReporterHandler handler = issueReporterHandlerFor("jira");
-//            handler.handleFailedTest(relatedIssueSource.value(), relatedIssue, iTestResult);
+        for (String relatedIssue : issue) {
+            relatedIssueKeys.add(relatedIssue);
         }
 
     }
 
-    private TestFailureWrapper getTestFailureWrapperFor(RelatedIssueSource relatedIssueSource, String relatedIssue, String stackTrace) {
-        Map<String, TestFailureWrapper> testFailureMap = getFailureMapForIssue(relatedIssue);
+    private TestFailureWrapper getTestFailureWrapperFor(RelatedIssueSource relatedIssueSource, String stackTrace) {
 
         String stackTraceHash = buildShaHashOf(stackTrace);
 
         TestFailureWrapper wrapper = testFailureMap.get(stackTraceHash);
         if (wrapper == null) {
-            wrapper = new TestFailureWrapper(relatedIssueSource, relatedIssue, stackTrace, stackTraceHash);
+            wrapper = new TestFailureWrapper(relatedIssueSource, stackTrace, stackTraceHash);
             testFailureMap.put(stackTraceHash, wrapper);
         }
         return wrapper;

@@ -14,82 +14,20 @@ import org.testng.Reporter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
-import java.util.Iterator;
+import java.util.*;
+import java.text.MessageFormat;
 
 public class JiraIssueReporterHandler implements IssueReporterHandler {
 
 
-    public void handleFailedTest(TestFailureWrapper test) {
+    public void handleFailedTest(Map<String, TestFailureWrapper> testFailureMap, Set<String> relatedIssueKeys, RelatedIssueSource relatedIssueSource) {
 
-        System.out.println("Commenting issue " + test.getIssue() + " with test failure.");
+        System.out.println("Created issue with test failures.");
 
-        String username = System.getProperty("testngIssueUsername", "");
-        String password = System.getProperty("testngIssuePassword", "");
+        Set<String> projectKeys = new HashSet<String>();
 
-        System.out.println("username is " + username);
-        if (username.equals("") || password.equals("")) {
-            System.out.println("Missing authentication details...");
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("The following test(s) associated with this issue recorded a failure:\n\n");
-
-        for (String signature : test.getSignatures()) {
-            sb.append("* ").append(signature).append("\n");
-        }
-
-        sb.append("\nThe test(s) failed with the following (filtered) exception:\n\n");
-
-        sb.append("{code}\n").append(test.getStackTrace()).append("\n{code}\n");
-
-
-        try {
-            System.out.println("Connecting to xml-rpc host on " + test.getRelatedIssueSource().value());
-            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL(test.getRelatedIssueSource().value() + "/rpc/xmlrpc"));
-            XmlRpcClient client = new XmlRpcClient();
-            client.setConfig(config);
-
-            List params = new ArrayList();
-            params.add(username);
-            params.add(password);
-
-            System.out.println("Attempting to login to JIRA installation at " + test.getRelatedIssueSource().value() + " as " + username);
-
-            String token = (String) client.execute("jira1.login", params);
-
-            System.out.println("Adding comment to " + test.getIssue());
-            params = new Vector();
-            params.add(token);
-            params.add(test.getIssue());
-            params.add(sb.toString());
-
-            client.execute("jira1.addComment", params);
-
-
-        } catch (MalformedURLException e) {
-            Reporter.log(e.getMessage());
-            e.printStackTrace();
-        } catch (XmlRpcException e) {
-            Reporter.log(e.getMessage());
-            e.printStackTrace();
-        }
-
-
-    }
-
-
-    public void handleFailedTest(String host, String key, ITestResult iTestResult) {
-
-        System.out.println("Commenting issue " + key + " with test failure.");
-
-        String username = System.getProperty("testngIssueUsername", "");
-        String password = System.getProperty("testngIssuePassword", "");
+        String username = System.getProperty(IssueReporter.TESTNG_ISSUEREPORT_USERNAME, "");
+        String password = System.getProperty(IssueReporter.TESTNG_ISSUEREPORT_PASSWORD, "");
 
         System.out.println("username is " + username);
         if (username.equals("") || password.equals("")) {
@@ -98,74 +36,115 @@ public class JiraIssueReporterHandler implements IssueReporterHandler {
         }
 
         StringBuilder sb = new StringBuilder();
+        int signatureCount = 0;
 
-        sb.append("A test associated with this issue has failed.\n\n");
-
-        sb.append("\n");
-        sb.append("{code:title=");
-        sb.append(iTestResult.getTestClass().getName());
-        sb.append("#");
-        sb.append(iTestResult.getMethod().getMethodName());
-        sb.append("(");
-
-        Object[] parameters = iTestResult.getParameters();
-
-        for (int i = 0; i < parameters.length; i++) {
-            Object parameter = parameters[i];
-            sb.append(parameter.toString());
-            if (i < parameters.length) {
-                sb.append(", ");
+        for (Map.Entry<String, TestFailureWrapper> failure : testFailureMap.entrySet()) {
+            if (signatureCount > 0) {
+                sb.append("\n");
             }
-        }
-        sb.append(")");
 
+            sb.append(MessageFormat.format("*The following {0} test(s) failed:*\n\n", failure.getValue().getSignatures().size()));
 
-        sb.append("}\n");
-
-        StackTraceElement[] elements = iTestResult.getThrowable().getStackTrace();
-
-        System.out.println(iTestResult.getThrowable().getClass().getName());
-        for (StackTraceElement element : elements) {
-            if (!element.getClassName().matches("(sun.reflect|java.lang.reflect|org.testng).*")) {
-                sb.append("    at ").append(element.toString()).append("\n");
+            for (String signature : failure.getValue().getSignatures()) {
+                sb.append("* ").append(signature).append("\n");
+                signatureCount++;
             }
+            sb.append("{code}").append(failure.getValue().getStackTrace()).append("{code}\n");
+
         }
 
-        sb.append("{code}\n");
+        sb.append("\nThe following issues may have regression problems:\n\n");
+
 
         try {
-            System.out.println("Connecting to xml-rpc host on " + host);
-            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL(host + "/rpc/xmlrpc"));
-            XmlRpcClient client = new XmlRpcClient();
-            client.setConfig(config);
 
-            List params = new ArrayList();
-            params.add(username);
-            params.add(password);
+            XmlRpcClient client;
+            client = buildXmlRpcClient(relatedIssueSource.value());
+            String token = loginToJira(client, relatedIssueSource.value(), username, password);
 
-            System.out.println("Attempting to login to JIRA installation at " + host + " as " + username);
+            for (String relatedIssueKey : relatedIssueKeys) {
 
-            String token = (String) client.execute("jira1.login", params);
+                Map issue = findJiraIssue(client, token, relatedIssueKey);
+                String summary = (String) issue.get("summary");
 
-            System.out.println("Adding comment to " + key);
-            params = new Vector();
-            params.add(token);
-            params.add(key);
-            params.add(sb.toString());
+                sb.append("* ").append(relatedIssueKey).append(": ").append(summary).append("\n");
+            }
 
-            client.execute("jira1.addComment", params);
+
+            // Extract project from related issues
+            for (String relatedIssueKey : relatedIssueKeys) {
+                projectKeys.add(relatedIssueKey.split("-")[0]);
+            }
+
+            for (String projectKey : projectKeys) {
+
+                Map issueMap = new HashMap();
+                issueMap.put("project", projectKey);
+                issueMap.put("summary", "Project has " + signatureCount + " failing tests");
+                issueMap.put("type", "1");
+                issueMap.put("description", sb.toString());
+
+                Map newIssue = buildNewJiraIssue(client, token, issueMap);
+
+                String key = (String) newIssue.get("key");
+                System.out.println("Adding ticket " + key + " to project " + projectKey);
+
+            }
+
 
 
         } catch (MalformedURLException e) {
-            Reporter.log(e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (XmlRpcException e) {
-            Reporter.log(e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
     }
+
+
+    private XmlRpcClient buildXmlRpcClient(String host) throws MalformedURLException {
+        System.out.println("Connecting to xml-rpc host on " + host);
+        XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+        config.setServerURL(new URL(host + "/rpc/xmlrpc"));
+        XmlRpcClient client = new XmlRpcClient();
+        client.setConfig(config);
+        return client;
+    }
+
+    private String loginToJira(XmlRpcClient client, String host, String username, String password) throws XmlRpcException {
+        List params = new ArrayList();
+        params.add(username);
+        params.add(password);
+
+        System.out.println("Attempting to login to JIRA installation at " + host + " as " + username);
+
+        String token = (String) client.execute("jira1.login", params);
+        return token;
+    }
+
+    private Map findJiraIssue(XmlRpcClient client, String token, String relatedIssueKey) throws XmlRpcException {
+
+        List params = new ArrayList();
+        params.add(token);
+        params.add(relatedIssueKey);
+
+
+        HashMap issue = (HashMap) client.execute("jira1.getIssue", params);
+        return issue;
+
+    }
+
+    private Map buildNewJiraIssue(XmlRpcClient client, String token, Map issueMap) throws XmlRpcException {
+        List params = new ArrayList();
+        params.add(token);
+        params.add(issueMap);
+
+
+        HashMap issue = (HashMap) client.execute("jira1.createIssue", params);
+        return issue;
+
+    }
+
 
 
 }

@@ -12,14 +12,13 @@ import java.util.List;
 public class TestFailureWrapper {
 
     private RelatedIssueSource relatedIssueSource;
-    private String issue;
+
     private String stackTrace;
     private String stackTraceHash;
     private List<String> signatures = new ArrayList<String>();
 
-    public TestFailureWrapper(RelatedIssueSource relatedIssueSource, String issue, String stackTrace, String stackTraceHash) {
+    public TestFailureWrapper(RelatedIssueSource relatedIssueSource, String stackTrace, String stackTraceHash) {
         this.relatedIssueSource = relatedIssueSource;
-        this.issue = issue;
         this.stackTrace = stackTrace;
         this.stackTraceHash = stackTraceHash;
 
@@ -31,14 +30,6 @@ public class TestFailureWrapper {
 
     public void setRelatedIssueSource(RelatedIssueSource relatedIssueSource) {
         this.relatedIssueSource = relatedIssueSource;
-    }
-
-    public String getIssue() {
-        return issue;
-    }
-
-    public void setIssue(String issue) {
-        this.issue = issue;
     }
 
     public String getStackTrace() {

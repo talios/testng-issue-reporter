@@ -8,8 +8,10 @@ package com.theoryinpractice.testng;
 
 import org.testng.ITestResult;
 
-public interface IssueReporterHandler {
-    void handleFailedTest(String host, String key, ITestResult iTestResult);
+import java.util.Map;
+import java.util.Set;
 
-    void handleFailedTest(TestFailureWrapper value);
+public interface IssueReporterHandler {   
+
+    void handleFailedTest(Map<String, TestFailureWrapper> testFailureMap, Set<String> relatedIssueKeys, RelatedIssueSource relatedIssueSource);
 }
